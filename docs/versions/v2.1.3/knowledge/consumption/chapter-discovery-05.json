@@ -1,0 +1,173 @@
+{
+  "kind": "T37_ACCEPTED_CHAPTER_DISCOVERY_ROUTES",
+  "repository": "kaicreator-mm/tally",
+  "corpusCommit": "f70096afc2e35f30df8f1fc874207cb597632afc",
+  "sourceIndex": {
+    "path": "docs/versions/v2.1.3/knowledge/fine-grained/README.md",
+    "blob": "47855f903b147cb0808ee0e398ad34c5c38d7261"
+  },
+  "range": [
+    47,
+    50
+  ],
+  "scope": "T39 additive mechanical discovery metadata only, not semantic unit or qualification census; original index owns navigation and source text owns meaning. Historical T37 R5 census remains frozen at 46 chapters/265 headings and 67 references/86 edges.",
+  "entries": [
+    {
+      "chapter": "T35-5-appointment-interval-capacity-composition",
+      "title": "T35-5 · 预约、时段资源容量与改约的知识组合（B5）",
+      "ownersFromIndex": [
+        "K01",
+        "K02",
+        "K03",
+        "K05",
+        "K09",
+        "K10"
+      ],
+      "routeLabel": "预约、时段资源容量与原子改约",
+      "indexLine": 262,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-5-appointment-interval-capacity-composition.md",
+        "blob": "707be88972f10c52b4786dfb881cba8584eef490"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 复用与真实增量"
+        },
+        {
+          "line": 11,
+          "heading": "2. 明确教学合同：时段、身份及资源"
+        },
+        {
+          "line": 19,
+          "heading": "3. 独占与容量资源不是同一谓词"
+        },
+        {
+          "line": 27,
+          "heading": "4. 从业务约束选择提交机制"
+        },
+        {
+          "line": 51,
+          "heading": "5. 临时占位、确认、取消与改约"
+        },
+        {
+          "line": 59,
+          "heading": "6. 选择最小结构及独立反例（NOT_RUN）"
+        },
+        {
+          "line": 73,
+          "heading": "7. 来源与资格"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T35-6-process-supervision-and-shutdown-composition",
+      "title": "T35-6 · 跨进程资源所有权、监督与异常退出（G5）",
+      "ownersFromIndex": [
+        "K03",
+        "K02",
+        "K10",
+        "K05"
+      ],
+      "routeLabel": "跨进程资源所有权、监督与异常退出",
+      "indexLine": 263,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-6-process-supervision-and-shutdown-composition.md",
+        "blob": "4fd8d18b8821a7d4c396c4f132fc00000ca5fa01"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 先定义所拥有的工作，而非根据进程名称追杀"
+        },
+        {
+          "line": 11,
+          "heading": "2. 集合成员资格与监督者失效"
+        },
+        {
+          "line": 17,
+          "heading": "3. 停止与完成是多维观察"
+        },
+        {
+          "line": 30,
+          "heading": "4. 来源与边界"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T35-7-diagnostic-logging-audit-composition",
+      "title": "T35-7 · 可行动诊断、安全日志与业务审计事实（G6）",
+      "ownersFromIndex": [
+        "K06",
+        "K10",
+        "K07",
+        "K01",
+        "K03",
+        "K05"
+      ],
+      "routeLabel": "可行动诊断、安全日志与业务审计事实",
+      "indexLine": 264,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-7-diagnostic-logging-audit-composition.md",
+        "blob": "20fe268593a718dbf65f21acc7d32ae04919fe00"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 三种事实不能由同一条文本代替"
+        },
+        {
+          "line": 11,
+          "heading": "2. 同一操作的三种可区分历史"
+        },
+        {
+          "line": 17,
+          "heading": "3. 记录内容与输出边界"
+        },
+        {
+          "line": 23,
+          "heading": "4. 可反驳评价（NOT_RUN）"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T35-8-multi-provider-settlement-reconciliation",
+      "title": "T35-8 · 多支付方、结算与跨权威对账（B6）",
+      "ownersFromIndex": [
+        "K01",
+        "K02",
+        "K03",
+        "K05",
+        "K10"
+      ],
+      "routeLabel": "多支付方、结算与跨权威对账",
+      "indexLine": 265,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-8-multi-provider-settlement-reconciliation.md",
+        "blob": "6f8b1eebc04ed8cc223c5cac66eec3757870490e"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 区分业务订单、实际付款、服务商余额、银行到账"
+        },
+        {
+          "line": 11,
+          "heading": "2. 不确定结果下的跨支付方切换"
+        },
+        {
+          "line": 17,
+          "heading": "3. 多层对账：固定范围、逐键及总额"
+        },
+        {
+          "line": 28,
+          "heading": "4. 结构选择及反例（NOT_RUN）"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    }
+  ]
+}
