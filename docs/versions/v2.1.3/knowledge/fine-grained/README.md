@@ -247,7 +247,11 @@ R4-G 四个具体子目标及 RE-02/RE-03 限定 D→S 已在 [#624 closeout](ht
 
 ## T37-R4 · 通用与业务功能组合及案例阅读入口（#634）
 
-输入 c301498b79bb320e5d610bac56dc53e4d500627b。[R4阶段选择及公开反例](../consumption/T37-r4-function-composition.md)、[17条新增引用及39条条件导航](../consumption/decision-references-r4.json)：8组已有G1–G4/B1–B4教学组合阅读入口，9个历史Case阅读视图（18个既有Case，不新计数），按实际合同、阶段及风险关联原有专业机制和案例。不是新知识Owner、固定必读集合、通用业务框架或新Case/Rule。50已接受+17候选引用、47已接受+39候选导航边；46章/265定位、S51/D0/U5及原资格不改。公开教学NOT_RUN；R5综合核对前不声称全库语义完成或实际消费。#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD。
+输入 c301498b79bb320e5d610bac56dc53e4d500627b。[R4阶段选择及公开反例](../consumption/T37-r4-function-composition.md)、[17条新增引用及39条条件导航](../consumption/decision-references-r4.json)：8组已有G1–G4/B1–B4教学组合阅读入口，9个历史Case阅读视图（18个既有Case，不新计数），按实际合同、阶段及风险关联原有专业机制和案例。不是新知识Owner、固定必读集合、通用业务框架或新Case/Rule。17引用及39条边在 [#634 收尾](https://github.com/kaicreator-mm/tally/issues/634#issuecomment-7188809630) 限定接受并合入 edbe97e099c52f88144f07e5747fe2888a314593（0/0/0）；67已接受引用、86条件导航边；46章/265定位、S51/D0/U5及原资格不改。公开教学NOT_RUN；R5综合核对前不声称全库语义完成或实际消费。#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD。
+
+## T37-R5 · 累计知识消费综合核对及产品差距（#636）
+
+输入 edbe97e099c52f88144f07e5747fe2888a314593。[实际静态盘点](../consumption/T37-r5-static-census.json)、[累计评估](../consumption/T37-r5-cumulative-assessment.md)、[产品差距与准入](../consumption/T37-r5-product-readiness.md)：67引用/86边，46章/265发现，41不同源文件（29正文/8案例/4原知识），17正文仅发现、4对范围重叠、弱连通分量59/6/2。非全库语义覆盖或实际检索率；不再按数量盲目扩展，真实任务触发定向补证。原#564 A1–A7及#565实际代码只读核对，既有四项缺陷均OPEN。G0综合独审待完成，G1恢复原修正授权HOLD、G2修正复审/G3 A24实际新消费NOT_RUN/HOLD、G4生产迁移另行准入。无新增引用/Case/Claim/Rule，原S51/D0/U5及历史资格不改。#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD，R6 NO_NEW_SOURCE_IMPLEMENTATION 仍有效。
 
 ## 阅读路径与边界
 
