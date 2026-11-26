@@ -24,7 +24,7 @@
 | [07](consumption/chapter-discovery-07.json) | 6/26 | 62ba9f0bbf0a9f0b0238a2bc42b8228df0b915db |
 | [08](consumption/chapter-discovery-08.json) | 6/31 | aef204c5c5d6ae20760079d11d1c6bdacfc50891 |
 
-实际 parse 8分片，66唯一 chapter、360 H2定位（原50/284 + 16/76）；06–08 是候选，含14已接受章和2待接受章，若全批通过才可称66/360正式发现。01–05 原 blob 与历史记录相同，不改历史 corpus 或 index line。此数不是知识点、语义覆盖、检索效果或全库覆盖比例。原历史 T37 census 保持46/265。
+实际 parse 8分片，66唯一 chapter、360个标题定位（342 H2、18 H3及更深；原50/284 + 16/76，本轮新增76 H2）；06–08 是候选，含14已接受章和2待接受章，若全批通过才可称66/360正式发现。01–05 原 blob 与历史记录相同，不改历史 corpus 或 index line。此数不是知识点、语义覆盖、检索效果或全库覆盖比例。原历史 T37 census 保持46/265。
 
 实际 parse 五份 decision reference，13+11+12+14+17=67唯一 key，12+7+12+16+39=86唯一(from,predicate,to)，全部 edge 端点和 basis key 存在，rules 0；五份 blob 依次 646019f5dc366392fea67ccb6571e843b7e5b895、8638a747969b6938ffa5ca18c2e1699ea8263b5b、fc2a2f45efb5ef7e16e5f857a816b4ba57892fdb、dab519d69b4b494fb1d820d6836d9b6ec19cec81、6e70161357b18585d66d27c8719844df3d677fc2。按同 path 及闭区间范围交叠实际得到四对：P36-RANGE/P37R4-G3、P36-STAGING/P37R4-G3、P36-CACHE/P37R4-G4、P36-EXPORT/P37R4-B4，符合历史 T37-R5-static-census；前者局部机制/决策入口，后者复杂功能组合语境，不因源范围重叠删除或重复建立权威。关系数及规则不变；本次静态统计不等于全部关系语义再验证或全库无冲突证明。
 
