@@ -1,0 +1,482 @@
+{
+  "kind": "T37_BOUNDED_ADVISORY_REFERENCE_EXTENSION",
+  "repository": "kaicreator-mm/tally",
+  "corpusCommit": "748d53fba2166fb9e1654b73cef684083959ee56",
+  "scope": "14 selected decision-reference ranges over eight accepted files; no canonical ontology or whole-domain coverage; numeric and locale subproblems separately selected",
+  "priorReferences": [
+    {
+      "path": "docs/versions/v2.1.3/knowledge/consumption/pilot-references.json",
+      "blob": "646019f5dc366392fea67ccb6571e843b7e5b895"
+    },
+    {
+      "path": "docs/versions/v2.1.3/knowledge/consumption/decision-references-r1.json",
+      "blob": "8638a747969b6938ffa5ca18c2e1699ea8263b5b"
+    },
+    {
+      "path": "docs/versions/v2.1.3/knowledge/consumption/decision-references-r2.json",
+      "blob": "fc2a2f45efb5ef7e16e5f857a816b4ba57892fdb"
+    }
+  ],
+  "records": [
+    {
+      "key": "P37R3-RELATIONAL",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K03",
+      "kind": "MODEL_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27b-1-relational-data-and-transactions.md",
+        "blob": "dfa2626af54fa2a77ab1e78e6e8d93e467ed2b7b",
+        "lines": [
+          5,
+          40
+        ]
+      },
+      "purpose": "关系身份、函数依赖、无损分解及依赖保持",
+      "when": "实际关系模型存在业务身份、冗余或范式选择",
+      "materialFacts": "获权实体/关系/自然及代理键、实际FD、候选键、原关系及分解投影、读写合同",
+      "counterexampleOrLimit": "样本不能证明FD；无损不等于依赖保持；历史成交快照不是当前名称冗余",
+      "sourceQualification": "原关系理论及原创教学推导，非实际数据库运行",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R3-CONSTRAINT",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K03",
+      "kind": "MECHANISM",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27b-1-relational-data-and-transactions.md",
+        "blob": "dfa2626af54fa2a77ab1e78e6e8d93e467ed2b7b",
+        "lines": [
+          41,
+          65
+        ]
+      },
+      "purpose": "数据库身份、缺失值、引用与跨行约束",
+      "when": "实际PostgreSQL18数据约束及写入/删除合同",
+      "materialFacts": "真实键范围、NULL语义、父记录、约束/删除政策及业务授权；跨行不变量另核事务机制",
+      "counterexampleOrLimit": "CHECK>0不拒绝NULL；UNIQUE默认NULL可不同；FK不是权限；不能用任意跨行CHECK或级联代替合同",
+      "sourceQualification": "原PG18限定教学DDL与官方机制，非执行/授权",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R3-QUERY",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K03",
+      "kind": "METHOD",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27b-1-relational-data-and-transactions.md",
+        "blob": "dfa2626af54fa2a77ab1e78e6e8d93e467ed2b7b",
+        "lines": [
+          66,
+          88
+        ]
+      },
+      "purpose": "查询结果合同、空值、连接粒度与索引成本",
+      "when": "实际SQL读结果/分页/聚合或物理访问优化",
+      "materialFacts": "真实输入、NULL/连接/聚合合同、排序唯一性、目标引擎、统计/计划及同负荷成本",
+      "counterexampleOrLimit": "LEFT JOIN条件从ON移WHERE可能丢父行；COUNT(*)不等于COUNT(column)；索引不证明更快，EXPLAIN ANALYZE实际执行",
+      "sourceQualification": "原SQL教学与目标引擎限定，NOT_RUN",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R3-TRANSACTION",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K03",
+      "kind": "MECHANISM",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27b-1-relational-data-and-transactions.md",
+        "blob": "dfa2626af54fa2a77ab1e78e6e8d93e467ed2b7b",
+        "lines": [
+          89,
+          114
+        ]
+      },
+      "purpose": "数据库提交边界、隔离与业务不变量",
+      "when": "实际PG18并发读写、跨行不变量或一致读取",
+      "materialFacts": "真实权威读谓词/写集、全部写路径、隔离/锁机制、错误重试与提交确认",
+      "counterexampleOrLimit": "各自行锁不能防写偏斜；串行化失败需重新读并按获权条件重试整个事务；外部效果不属DB事务",
+      "sourceQualification": "PG18限定教学与K03 CON原归属，NOT_RUN",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R3-SYNC",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K03",
+      "kind": "MECHANISM",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27c-1-concurrency-task-lifetime.md",
+        "blob": "8fb9513b0bca07e4f81bb0750ff905c3ca87c755",
+        "lines": [
+          5,
+          33
+        ]
+      },
+      "purpose": "内存可见性、逻辑竞态及同步机制选择",
+      "when": "实际进程内共享状态或任务交错；Go规则仅适用其内存模型",
+      "materialFacts": "共享对象、读改写不变量、全访问协议、语言/API、版本ABA、死锁/资源预算",
+      "counterexampleOrLimit": "单线程await仍有业务竞态；sleep不建立happens-before；信号量不限制等待者；本地锁不保护其他进程",
+      "sourceQualification": "Go memory model(2022-06-06)限定及教学，非其它语言",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R3-LIFETIME",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K03",
+      "kind": "MECHANISM",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27c-1-concurrency-task-lifetime.md",
+        "blob": "8fb9513b0bca07e4f81bb0750ff905c3ca87c755",
+        "lines": [
+          34,
+          49
+        ]
+      },
+      "purpose": "任务准入、生命周期、取消收敛及有界停止",
+      "when": "实际任务排队/许可/运行/退出，存在资源与失败传播",
+      "materialFacts": "合法受理/取消/settle合同、全队列及producer预算、子任务Owner、真实join/资源与外部效果",
+      "counterexampleOrLimit": "C4+Q16仅限定控制器20；未开始不等于仍排队；TaskGroup不接管外部任务；等待超时不证明已取消",
+      "sourceQualification": "Python3.11 TaskGroup/Go pipeline及既有局部Case；NOT_RUN",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R3-CONSISTENCY",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K02",
+      "kind": "MODEL_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27c-2-distributed-consistency-coordination-recovery.md",
+        "blob": "941bb0e11a631bcd5b06860c03e0225be40a03d2",
+        "lines": [
+          5,
+          16
+        ]
+      },
+      "purpose": "一致性合同、分区决策及多数集合边界",
+      "when": "实际跨副本/节点协调且要求可观察读写语义",
+      "materialFacts": "真实操作历史、实时先后、多键事务、分区/冲突政策、固定成员与协议持久化",
+      "counterexampleOrLimit": "线性化不等于仅串行化；最终一致不等于有界陈旧；多数相交不证明共识或所有副本已应用",
+      "sourceQualification": "原理论及etcd v3.6局部说明，不是Raft证明",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R3-WATCH",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K03",
+      "kind": "MECHANISM",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27c-2-distributed-consistency-coordination-recovery.md",
+        "blob": "941bb0e11a631bcd5b06860c03e0225be40a03d2",
+        "lines": [
+          17,
+          38
+        ]
+      },
+      "purpose": "etcd v3.6快照分页、Watch完整revision及应用水位",
+      "when": "实际选etcd v3.6且需快照+增量派生投影",
+      "materialFacts": "同scope/cluster_id、固定r/范围/键续页、实际watch_id/fragment重组、完整组原子应用及持久checkpoint",
+      "counterexampleOrLimit": "header或created ACK不是已应用；历史分页不更新r；DELETE用删除revision；压缩/换集群须重建或按实际恢复合同处理；Watch非线性化读",
+      "sourceQualification": "etcd v3.6限定FG13与公开教学，不是实际SDK/服务运行",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R3-FENCE",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K02",
+      "kind": "MECHANISM",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27c-2-distributed-consistency-coordination-recovery.md",
+        "blob": "941bb0e11a631bcd5b06860c03e0225be40a03d2",
+        "lines": [
+          39,
+          42
+        ]
+      },
+      "purpose": "租约、资源侧单调fence与实时撤权区别",
+      "when": "实际分布式执行许可可过期、旧进程仍能写且资源能核token",
+      "materialFacts": "可信发放者、资源/epoch、同一原子写内的高水位、稳定操作身份、当前授权合同",
+      "counterexampleOrLimit": "B未在资源建立42时仅高水位不能阻止A41；新epoch不能直接重复token；不可校验外部API无此保证",
+      "sourceQualification": "原资源侧教学fencing，不是实时撤权协议证明",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R3-LINEAGE",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K09",
+      "kind": "METHOD",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T32b-2-data-lineage-conflict-tombstones.md",
+        "blob": "84d9e54c91fb7c5e11af9f325ab237c78127d792",
+        "lines": [
+          5,
+          34
+        ]
+      },
+      "purpose": "来源身份、离线补丁冲突、代际删除与恢复",
+      "when": "实际多来源/离线更新/删除传播或恢复",
+      "materialFacts": "真实source/version/run/entity generation、权威合并及联合约束、当前许可、tombstone保留与重新加入合同",
+      "counterexampleOrLimit": "确定性winner非业务解决；非重叠字段不一定可合并；旧v7不得复活已删generation1；计数相同不证明映射正确",
+      "sourceQualification": "CouchDB3.5/OpenLineage1.55.0局部合同及中心教学，不是多主算法或实际删除",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R3-HEAP",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K03",
+      "kind": "MODEL_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27d-1-data-structures-cost-selection.md",
+        "blob": "aa0cb4135244975d76d6ea49bd2e3140c788b902",
+        "lines": [
+          28,
+          41
+        ]
+      },
+      "purpose": "优先队列任意ID删除、双索引不变量与成本",
+      "when": "实际调度器需按ID取消/改优先级且堆为候选",
+      "materialFacts": "活动ID唯一、完整比较及稳定次键、heap/pos双向RI、所有交换/修复路径、观察同步及成本模型",
+      "counterexampleOrLimit": "删除迁入元素可能需上浮或下沉；最终排序不能掩盖中间索引错误；已出队非排队；O(log n)有Map/扩容假设",
+      "sourceQualification": "原FG12教学与数学推导，非运行/性能实测",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R3-DEADLINE",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K03",
+      "kind": "MECHANISM",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T25b-2-time-clock-calendar-semantics.md",
+        "blob": "195c4e65baadcaa404a34350a4f797ae02f65012",
+        "lines": [
+          5,
+          47
+        ]
+      },
+      "purpose": "时间对象、单一剩余预算与实际取消能力",
+      "when": "实际超时/重试/跨休眠期限或时间域选择",
+      "materialFacts": "业务时间含义、目标clock/suspend合同、单位和表达范围、单一deadline、实际timeout/取消及效果回执",
+      "counterexampleOrLimit": "每次重试不重置预算；monotonic绝对数非跨重启时间；迟到成功不是按期完成；等待超时不等于未执行",
+      "sourceQualification": "Linux clock限定及伪代码教学，非实际定时器测试",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R3-PRECISION",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K03",
+      "kind": "MODEL_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T25b-4-exact-numbers-locale-bidi.md",
+        "blob": "b7cad18c0201941f038b51ceb66aee9a6dbe2ed9",
+        "lines": [
+          5,
+          20
+        ]
+      },
+      "purpose": "数值保真与独立的排序身份合同",
+      "when": "实际需要精确数值计算，或需要locale比较/稳定分页；按问题分别选择对应段",
+      "materialFacts": "数值：单位/范围/舍入阶段/中间精度/对账；排序：实际locale/版本/比较强度/业务身份/唯一次键",
+      "counterexampleOrLimit": "Decimal从float不恢复原十进制；最终舍入不恢复已丢信息；安全输入不保证中间值；排序相等不等于身份相等，cursor须绑定实际排序及数据合同",
+      "sourceQualification": "Python3.13.18 decimal/Unicode17 UTS10 rev53限定及教学；非财务政策或实测",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R3-CAPACITY",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K10",
+      "kind": "METHOD",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T33b-1-performance-queueing-capacity.md",
+        "blob": "585e865092ede14f371a704e70ec96771ae3ca67",
+        "lines": [
+          5,
+          37
+        ]
+      },
+      "purpose": "真实工作量边界、排队模型、瓶颈与负载测量",
+      "when": "实际准入容量/吞吐/延迟或负载试验设计",
+      "materialFacts": "同边界计数、到达/服务模型、稳态前提、真实资源需求/负载分布/目标及完整试验分母",
+      "counterexampleOrLimit": "客户端超时不能直接扣远端在途；M/M/1不适用任意负载，均值非P95；增加worker不突破DB瓶颈；未发起不等于服务器失败",
+      "sourceQualification": "原M/M/1理论和k6限定说明及教学，非实测容量",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    }
+  ],
+  "relations": [
+    {
+      "from": "P37R3-RELATIONAL",
+      "to": "P37R3-CONSTRAINT",
+      "predicate": "CONTEXT_FOR",
+      "when": "实际逻辑身份和依赖需要映射到目标数据库约束；不假定范式自动实现约束",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R3-RELATIONAL",
+        "P37R3-CONSTRAINT"
+      ]
+    },
+    {
+      "from": "P37R3-RELATIONAL",
+      "to": "P37R3-QUERY",
+      "predicate": "CONTEXT_FOR",
+      "when": "查询粒度、历史快照及关联身份决定真实结果合同",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R3-RELATIONAL",
+        "P37R3-QUERY"
+      ]
+    },
+    {
+      "from": "P37R3-CONSTRAINT",
+      "to": "P37R3-TRANSACTION",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实跨行约束或并发唯一性需要额外事务/锁或实际约束机制",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R3-CONSTRAINT",
+        "P37R3-TRANSACTION"
+      ]
+    },
+    {
+      "from": "P37R3-QUERY",
+      "to": "P37R3-PRECISION",
+      "predicate": "CONTEXT_FOR",
+      "when": "若实际涉及金额精度或locale排序分页，则读对应数值或排序合同；一般查询不必加载两者",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R3-QUERY",
+        "P37R3-PRECISION"
+      ]
+    },
+    {
+      "from": "P37R3-TRANSACTION",
+      "to": "P36-COMMIT",
+      "predicate": "CONTEXT_FOR",
+      "when": "受保护权威提交同时涉及当前执行许可、版本及共同写集时",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R3-TRANSACTION",
+        "P36-COMMIT"
+      ]
+    },
+    {
+      "from": "P37R3-TRANSACTION",
+      "to": "P36-EFFECT",
+      "predicate": "CONTEXT_FOR",
+      "when": "确有独立外部Effect或消息时另核事务外结果，不自动采用Kafka",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R3-TRANSACTION",
+        "P36-EFFECT"
+      ]
+    },
+    {
+      "from": "P37R3-SYNC",
+      "to": "P37R3-LIFETIME",
+      "predicate": "CONTEXT_FOR",
+      "when": "共享资源和准入/取消实际有关时核同步及生命周期的不同保证",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R3-SYNC",
+        "P37R3-LIFETIME"
+      ]
+    },
+    {
+      "from": "P37R3-LIFETIME",
+      "to": "P37R3-HEAP",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实待办需按ID取消或改优先级且采用堆时核双索引RI，非所有队列",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R3-LIFETIME",
+        "P37R3-HEAP"
+      ]
+    },
+    {
+      "from": "P37R3-LIFETIME",
+      "to": "P37R3-DEADLINE",
+      "predicate": "CONTEXT_FOR",
+      "when": "实际等待、重试和停止有期限时核同clock预算及真实取消",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R3-LIFETIME",
+        "P37R3-DEADLINE"
+      ]
+    },
+    {
+      "from": "P37R3-LIFETIME",
+      "to": "P37R3-CAPACITY",
+      "predicate": "CONTEXT_FOR",
+      "when": "有端到端负载及资源目标时区分控制器容量与系统计数/瓶颈",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R3-LIFETIME",
+        "P37R3-CAPACITY"
+      ]
+    },
+    {
+      "from": "P37R3-CONSISTENCY",
+      "to": "P37R3-WATCH",
+      "predicate": "CONTEXT_FOR",
+      "when": "实际采用etcd v3.6派生投影而非当前权威读时，另核协议和恢复",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R3-CONSISTENCY",
+        "P37R3-WATCH"
+      ]
+    },
+    {
+      "from": "P37R3-CONSISTENCY",
+      "to": "P37R3-FENCE",
+      "predicate": "CONTEXT_FOR",
+      "when": "协调租约不能原子撤销旧请求且受保护资源需写隔离时",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R3-CONSISTENCY",
+        "P37R3-FENCE"
+      ]
+    },
+    {
+      "from": "P37R3-FENCE",
+      "to": "P36-COMMIT",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实提交要求当前授权与版本时，资源高水位只是条件之一，不能替代保护提交",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R3-FENCE",
+        "P36-COMMIT"
+      ]
+    },
+    {
+      "from": "P37R3-WATCH",
+      "to": "P37-RECOVERY",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实恢复时存在历史压缩/集群身份变化及派生数据完整性目标",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R3-WATCH",
+        "P37-RECOVERY"
+      ]
+    },
+    {
+      "from": "P37R3-LINEAGE",
+      "to": "P37-MIGRATION",
+      "predicate": "CONTEXT_FOR",
+      "when": "涉及真实代际/版本变换及旧消费者/离线重入时，核映射与兼容",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R3-LINEAGE",
+        "P37-MIGRATION"
+      ]
+    },
+    {
+      "from": "P37R3-HEAP",
+      "to": "P37-REPRESENTATION",
+      "predicate": "CONTEXT_FOR",
+      "when": "实际heap/pos双RI及frame决定可观察合法状态，需真实同步",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R3-HEAP",
+        "P37-REPRESENTATION"
+      ]
+    }
+  ],
+  "rules": [],
+  "execution": "NOT_RUN"
+}
